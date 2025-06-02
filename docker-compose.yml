@@ -1,0 +1,27 @@
+services:
+  whisperx:
+    image:
+      # Используем 'latest', который является псевдонимом для 'no_model'
+      # Или укажите конкретный тег, если нашли подходящий, например, ghcr.io/jim60105/whisperx:medium-ru
+      ghcr.io/jim60105/whisperx:large-v3-ru
+    container_name: whisperx_gpu
+    restart: unless-stopped
+    user: "0:0"
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - WHISPER_MODEL_SIZE=${WHISPER_MODEL_SIZE:-medium}
+      - COMPUTE_TYPE=${COMPUTE_TYPE:-float16}
+      - BATCH_SIZE=${BATCH_SIZE:-16}
+    volumes:
+      - ./audio_input:/input_audio:ro
+      - ./audio_output:/output_audio
+      - ./model_cache:/.cache
+      - ./entrypoint.sh:/entrypoint.sh:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    entrypoint: /entrypoint.sh
